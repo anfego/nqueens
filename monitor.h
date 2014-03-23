@@ -1,50 +1,101 @@
 // #include <iostream>       // std::cout
-#include <stack>          // std::stack
-/*
- monitor_t m;
-    mon_init(&m,num_ranks_participating);
-    mon_enter(&m);
-    mon_exit(&m);
-    mon_continue(&m);
-    mon_wait_in_q(&m);
-    mon_num_in_q(&m);
+#include <vector>          // std::stack
+#include <utility>
+#include <pthread.h>
 
-Note that these could be used to implement higher level monitors, e.g.
-    Simple lock and unlock:
-        mon_enter(&m);
-        mon_exit(&m);
-    Barrier:
-        mon_enter(&m);
-        if (mon_num_in_q(&m) < (num_ranks_participating-1))
-            mon_wait_in_q(&m);
-        mon_continue(&m);
-*/
 class monitor
 {
-	//private
-	pthread_t *threadArray;
-	numthreads; 
-	pthread_mutex_t p_mutex_1;
-	int mutex_resp;
-	std::stack<int> my_stack;//store index of thread
-	bool jobDone;
-
+	int job_number;
+	int locked_threads;
+	// pair <int,int> args;
+	vector<pair<int,int> > *args;
+	int total_proc;
+	bool endjob_flag ;
+	bool result
+	vector<pair<int,int> > * pullPtr;
+	vector<pair<int,int> > *result;
+	//initialize mutex
+	pthread_mutex_t buffer_mutex;
+	//initialize cond mutex
+	pthread_mutex_t condMutex;
+	pthread_cond_t cond;
+	//initialize threads
 public:
-	monitor(arguments){mon_init(&m,num_ranks_participating);};
-	~monitor();
+	
 
-	/* data */
-	//initializate monitors
-	void mon_init(num_ranks_participating);
-	// enter a process to the "dungeon"
+	monitor(arguments){
+		mon_init(int passed_proc, vector< pair<int,int> > * inputPull);
+	};
+	~monitor(){};
+	
+	void monitor_init(int passed_proc, std::vector < std::pair<int,int> > * inputPull);
+
+
+
+	void monitor_wait_in_que();
 	void mon_enter();
-	//exit a process from the "dungeon"
 	void mon_exit();
-	// 
+
 	void mon_continue();
-	// add a process to a waiting queue
-	void mon_wait_in_q();
-	// returns the number of proccess in queue
-	int mon_num_in_q();
 };
 
+
+void monitor::monitor_wait_in_que()
+{
+	return locked_threads;
+}
+void monitor::mon_enter()
+{
+    pthread_mutex_lock(&buffer_mutex);//free lock
+	// conditional mutex lock(queue_is_empty())
+	if(result)
+	{
+		pullPtr.push(returnArgs);
+		job_number++;
+	}
+	
+	if(job > 0)
+	{
+		args = pullPtr.pop_back();
+		job_number--;
+	}
+	else
+	{
+		//conditional mutex k()
+		locked_threads++;
+		
+		if(locked_threads == total_proc)
+			endjob_flag = true;
+		else
+		{
+	        pthread_mutex_unlock(&buffer_mutex);//free lock
+        	pthread_cond_wait(&cond, &condMutex); // unlock & sleep; wake up when signaled & lock again
+        }
+    }
+}
+
+void monitor::mon_exit()
+{
+	if((locked_threads > 0 && job_number > 0 )|| endjob_flag)
+	{
+		pthread_cond_signal(&cond);
+		locked_threads--;
+        // pthread_mutex_unlock(&buffer_mutex);//free lock
+	}
+	else
+	{
+        pthread_mutex_unlock(&buffer_mutex);//free lock
+	}
+
+	result = foo(args, returnArgs);
+}
+
+void monitor::mon_continue()
+{
+    // pthread_mutex_lock(&buffer_mutex);//free lock
+    if(job_number > 0)
+	{
+		args = pullPtr.pop_back();
+		job_number--;
+	}
+}

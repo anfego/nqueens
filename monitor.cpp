@@ -1,34 +1,100 @@
-monitor_init(int passed_proc)
+// #include <iostream>       // std::cout
+#include <vector>          // std::stack
+#include <utility>
+#include <pthread.h>
+#include <iostream>
+#include <stack>
+using namespace std;
+
+bool foo(vector<pair<int,int> > args, stack< vector <pair<int,int> > > returnArgs);
+
+class monitor
 {
-	//create stack
-	stack <(<int>stack)> check = new <(<int>stack)>stack;
-	int job_number = 0;
-	int locked_threads = 0;
-	stack <int> args;
-	total_proc = passed_proc;
-	bool endjob_flag = false;
+
+public:
+	int job_number;
+	int locked_threads;
+	// pair <int,int> args;
+	vector<pair<int,int> > args;
+	
+	int total_proc;
+	bool endjob_flag;
+	bool result;
+	stack< vector <pair<int,int> > > poolStack;
+	stack< vector <pair<int,int> > > returnArgs;
+	
 	//initialize mutex
+	pthread_mutex_t buffer_mutex;
+	
 	//initialize cond mutex
+	pthread_mutex_t condMutex;
+	pthread_cond_t cond;
+	
 	//initialize threads
+
+	monitor(int passed_proc, vector< pair<int,int> > * inputPull);
+	monitor();
+	~monitor(){};
+	void mon_init(int passed_proc, std::vector < std::pair<int,int> > * inputPull);
+	int monitor_wait_in_que();
+	void mon_enter();
+	void mon_exit();
+	void mon_continue();
+};
+
+monitor::monitor()
+{
+	cerr << "ERROR";
+	return;
+	//mon_init(int passed_proc, vector< pair<int,int> > * inputPull);
 }
 
-monitor_wait_in_que()
+monitor::monitor(int passed_proc, vector< pair<int,int> > * inputPull)
+{
+	monitor::mon_init(passed_proc, inputPull);
+}
+
+void monitor::mon_init(int passed_proc, std::vector < std::pair<int,int> > * inputPull)
+{
+	job_number = 0;
+	locked_threads = 0;
+	
+	// pair <int,int> args;
+	//args = new vector< pair<int,int> >;
+	total_proc = 0;
+	endjob_flag = false;
+	result = false;
+	// returnArgs = new vector<pair<int,int> >;
+	//initialize mutex
+	buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
+	//initialize cond mutex
+	condMutex = PTHREAD_MUTEX_INITIALIZER;
+	cond = PTHREAD_COND_INITIALIZER;
+	//initialize threads
+}
+int monitor::monitor_wait_in_que()
 {
 	return locked_threads;
 }
-mon_enter()
+
+void monitor::mon_enter()
 {
     pthread_mutex_lock(&buffer_mutex);//free lock
 	// conditional mutex lock(queue_is_empty())
 	if(result)
 	{
-		check.push(result);
-		job_number++;
+		while(returnArgs.size() > 0)
+		{			
+			poolStack.push(returnArgs.top());
+			returnArgs.pop();
+			job_number++;
+		}
 	}
 	
-	if(job > 0)
+	if(job_number > 0)
 	{
-		args = check.pop();
+		args = poolStack.top() ;
+		poolStack.pop() ;
 		job_number--;
 	}
 	else
@@ -41,14 +107,14 @@ mon_enter()
 		else
 		{
 	        pthread_mutex_unlock(&buffer_mutex);//free lock
-        	pthread_cond_wait(&cond, &buffer_mutex); // unlock & sleep; wake up when signaled & lock again
+        	pthread_cond_wait(&cond, &condMutex); // unlock & sleep; wake up when signaled & lock again
         }
     }
 }
 
-mon_exit()
+void monitor::mon_exit()
 {
-	if((locked_threads > 0 && job>0 )|| endjob_flag)
+	if((locked_threads > 0 && job_number > 0 )|| endjob_flag)
 	{
 		pthread_cond_signal(&cond);
 		locked_threads--;
@@ -59,15 +125,22 @@ mon_exit()
         pthread_mutex_unlock(&buffer_mutex);//free lock
 	}
 
-	result = foo(args);
+	result = foo(args, returnArgs);
 }
 
-mon_continue()
+void monitor::mon_continue()
 {
     // pthread_mutex_lock(&buffer_mutex);//free lock
     if(job_number > 0)
 	{
-		args = list.pop();
+		args = poolStack.top() ;
+		poolStack.pop() ;
 		job_number--;
 	}
+}
+
+bool foo(vector<pair<int,int> > args, stack< vector <pair<int,int> > > returnArgs)
+{
+	//returnArgs = NULL;
+	return true;
 }
