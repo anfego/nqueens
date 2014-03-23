@@ -12,3 +12,4 @@ README.txt
 *.txt
 p4
 *.o
+*.log
