@@ -16,7 +16,7 @@ Arguments:
 	#include <stdlib.h>
 	#include <vector>
 
-	#include "monitor.h"
+	// #include "monitor.h"
 
 	using namespace std;
 
@@ -24,7 +24,14 @@ Arguments:
 
 	void printSolution(std::vector< std::pair<int,int> > solution);
 
+	bool checkSolution(std::std::vector< pair<int,int> * solutionVector);
+	bool checkRow(std::std::vector< pair<int,int> * solutionVector);
+	bool checkDiagHigh(std::std::vector< pair<int,int> * solutionVector);
+	bool checkDiagLow(std::std::vector< pair<int,int> * solutionVector);
 
+
+	std::std::vector< pair<int,int> > * createInitalWork(int gridSize);
+	
 	int main(int argc, char const *argv[])
 	{
 		int gridSize = 4;
@@ -49,24 +56,20 @@ Arguments:
 
 		// creates a vector "stack" for each row
 		std::vector< std::pair<int,int> > * vectorPtr;
-		vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
+		createInitalWork(gridSize, vectorPtr);
+		// vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
 
-		for (int i = 0; i < gridSize; ++i)
-		{
-			pair<int,int> * pairPtr = new std::pair<int,int>;
-			(*pairPtr).first = 0;
-			(*pairPtr).second = i;
+		// for (int i = 0; i < gridSize; ++i)
+		// {
+		// 	pair<int,int> * pairPtr = new std::pair<int,int>;
+		// 	(*pairPtr).first = 0;
+		// 	(*pairPtr).second = i;
 
-			vectorPtr[i].push_back( *pairPtr );
-			printSolution(vectorPtr[i]);
-			delete(pairPtr);
-		}
-		pair<int,int> cell(0,0);
-		std::vector< pair<int,int> > solutionVector;
-		
-
-		solutionVector.push_back( pair<int,int> (0,0) );
-		
+		// 	vectorPtr[i].push_back( *pairPtr );
+		// 	printSolution(vectorPtr[i]);
+		// 	delete(pairPtr);
+		// }
+	
 		// create work
 		
 		// stack work
@@ -95,3 +98,97 @@ Arguments:
 	  	std::cout << '\n';
 
 	}
+	void createInitalWork(int gridSize, std::vector< std::pair<int,int> > * vectorPtr )
+	{
+		
+		
+		vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
+
+		for (int i = 0; i < gridSize; ++i)
+		{
+			pair<int,int> * pairPtr = new std::pair<int,int>;
+			(*pairPtr).first = 0;
+			(*pairPtr).second = i;
+
+			vectorPtr[i].push_back( *pairPtr );
+			printSolution(vectorPtr[i]);
+			delete(pairPtr);
+		}
+
+	}
+	bool checkSolution(std::std::vector< pair<int,int> * solutionVector)
+	{
+
+		if (checkRow(solutionVector) && checkDiagHigh(solutionVector) & checkDiagLow(solutionVector))
+			return true;
+		return false;
+	}
+	bool checkRow(std::std::vector< pair<int,int> * solutionVector)
+	{
+		
+		
+		int xCurrent = *(solutionVector).push_back().first;
+		int yCurrent = *(solutionVector).push_back().second;
+		// pop last pair to avoid to compare
+
+		(*solutionVector).pop_back();
+		
+		for (std::vector< pair<int,int> >::iterator i = solutionVector.begin() ; i != solutionVector.end(); ++i)
+	    {
+			if((*i).first == xCurrent)
+				return false;
+		}
+		// possible solution, add pair back to the vector
+		(*solutionVector).push_back(new pair<int,int>(xCurrent,yCurrent));
+		return true;
+	}
+	bool checkDiagHigh(std::std::vector< pair<int,int> * solutionVector)
+	{
+
+		
+		int xCurrent = *(solutionVector).push_back().first;
+		int yCurrent = *(solutionVector).push_back().second;
+		// pop last pair to avoid to compare
+
+		(*solutionVector).pop_back();
+		
+		for (std::vector< pair<int,int> >::iterator i = solutionVector.begin() ; i != solutionVector.end(); ++i)
+	    {
+
+			for (int pos = 0; (yCurrent-pos) <= 0 ; ++pos)
+			{
+				if((*i).first == (xCurrent-pos) && (*i).second == (yCurrent-pos))
+					return false;
+			
+			}
+		}
+		// possible solution, add pair back to the vector
+		(*solutionVector).push_back(new pair<int,int>(xCurrent,yCurrent));
+		return true;
+	}
+	bool checkDiagLow(std::std::vector< pair<int,int> * solutionVector)
+	{
+
+		
+		int xCurrent = *(solutionVector).push_back().first;
+		int yCurrent = *(solutionVector).push_back().second;
+		// pop last pair to avoid to compare
+
+		(*solutionVector).pop_back();
+		
+		for (std::vector< pair<int,int> >::iterator i = solutionVector.begin() ; i != solutionVector.end(); ++i)
+	    {
+
+			for (int pos = 0; (xCurrent-pos) <= 0 ; ++pos)
+			{
+				if((*i).first == (xCurrent-pos) && (*i).second == (yCurrent+pos))
+					return false;
+			
+			}
+		}
+		// possible solution, add pair back to the vector
+		(*solutionVector).push_back(new pair<int,int>(xCurrent,yCurrent));
+		return true;
+	}
+	
+
