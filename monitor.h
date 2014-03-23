@@ -37,14 +37,16 @@ public:
 	
 	//initialize threads
 
-	monitor(int passed_proc, vector< pair<int,int> > * inputPull);
+	monitor(int passed_proc,  int gridSize, vector< pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed);
 	monitor();
 	~monitor(){};
-	void mon_init(int passed_proc, std::vector < std::pair<int,int> > * inputPull);
+	void mon_init(int passed_proc, int gridSize, std::vector < std::pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex, pthread_mutex_t condMutex, pthread_cond_t cond);
 	int monitor_wait_in_que();
 	void mon_enter();
 	void mon_exit();
 	void mon_continue();
+	void printSolutionPool(std::stack<std::vector< std::pair<int,int> > > * printSolutionStack);
+
 };
 
 #endif

@@ -15,6 +15,8 @@ Arguments:
 	#include <string.h>
 	#include <stdlib.h>
 	#include <vector>
+	#include <pthread.h>
+
 
 	#include "monitor.h"
 
@@ -23,6 +25,8 @@ Arguments:
 	void createWork(int gridSize);
 
 	void printSolutionVector(std::vector< std::pair<int,int> > * solutionVector);
+
+	void printALLSolutionVectors(std::vector< std::pair<int,int> > * solutionVector);
 	
 	bool checkSolution(std::vector< std::pair<int,int> > * solutionVector);
 	
@@ -34,11 +38,26 @@ Arguments:
 	
 	void createInitalWork(int gridSize, std::vector< std::pair<int,int> > * vectorPtr );
 	
+	void * processFunc(void *p);
+
+	
+	
+	int procNum;
+	vector <pair<int,int> > *poolStack;
+	pthread_mutex_t buffer_mutex;
+	//initialize cond mutex
+	pthread_mutex_t condMutex;
+	pthread_cond_t cond;
+	
+
 	int main(int argc, char const *argv[])
 	{
 		int gridSize = 4;
 		int procNum = 1;
 		bool quiet = false;
+		int val;
+		void *ret = &val;
+
 
 		if(argc < 5)
 		{
@@ -55,11 +74,47 @@ Arguments:
 		if(!strcmp(argv[5],"-q"))
 			quiet = true;
 		
-
-		// creates a vector "stack" for each row
 		std::vector< std::pair<int,int> > * vectorPtr;
+		vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
+		
 		createInitalWork(gridSize, vectorPtr);
-		monitor * mon = new monitor(procNum,vectorPtr);
+		
+		for (int i = 0; i < gridSize; ++i)
+		{
+			printSolutionVector(&vectorPtr[i]);
+		}
+		
+		pthread_t threads[procNum];
+		
+		procNum = procNum;
+		poolStack = vectorPtr;
+		buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
+		
+		//initialize cond mutex
+		condMutex = PTHREAD_MUTEX_INITIALIZER;
+		cond = PTHREAD_COND_INITIALIZER;
+
+		// // creates a vector "stack" for each row
+		monitor mon(procNum, gridSize, vectorPtr, buffer_mutex, condMutex, cond);
+		
+
+		for (int i = 0; i < procNum-1; ++i)
+		{
+			if (pthread_create(&threads[i], NULL, processFunc, &mon)) 
+			{
+				perror("pthread_create: ");
+				exit(1);
+			}
+		}
+
+		processFunc(&mon);
+		// //monitor * mon = new monitor(procNum,vectorPtr);
+		  
+		// for (int i = 0; i < procNum; ++i)
+		// {	  
+		// 	pthread_join(threads[i], &ret);
+  // 		}
+
 
 
 		// vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
@@ -104,13 +159,19 @@ Arguments:
 
 	}
 	
+	void printALLSolutionVectors(std::vector< std::pair<int,int> >  * solutionVector)
+	{
+
+
+	}
+	
 
 
 	void createInitalWork(int gridSize, std::vector< std::pair<int,int> > * vectorPtr )
 	{
 		
 		// std::vector< std::pair<int,int> > * vectorPtr;
-		vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
+		
 
 		for (int i = 0; i < gridSize; ++i)
 		{
@@ -119,7 +180,7 @@ Arguments:
 			(*pairPtr).second = i;
 
 			vectorPtr[i].push_back( *pairPtr );
-			// printSolutionVector(&vectorPtr[i]);
+			printSolutionVector(&vectorPtr[i]);
 			delete(pairPtr);
 		}
 	
@@ -202,4 +263,24 @@ Arguments:
 		return true;
 	}
 	
+	void * processFunc(void *p)
+	{
+		monitor * mon =  (monitor *) p;
+		std::vector< pair<int,int> > solutionVector;
+		
+		while(!mon->endjob_flag)
+		{
+			mon->mon_enter();
+
+			solutionVector = mon->args;
+			mon->mon_exit();
+			
+			if(!checkSolution(&solutionVector))
+			{
+				
+			}
+
+		}
+		return NULL;
+	}
 
