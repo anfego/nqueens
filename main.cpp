@@ -22,13 +22,13 @@ Arguments:
 
 	using namespace std;
 
-	void createWork(int gridSize);
+	void createWork(int gridSize, std::vector<std::pair<int,int> > * solutionVector);
 
 	void printSolutionVector(std::vector< std::pair<int,int> > * solutionVector);
 
 	void printALLSolutionVectors(std::vector< std::pair<int,int> > * solutionVector);
 	
-	bool checkSolution(std::vector< std::pair<int,int> > * solutionVector);
+	bool isPosibleSolution(std::vector< std::pair<int,int> > * solutionVector);
 	
 	bool checkRow(std::vector<std::pair<int,int> > * solutionVector);
 	
@@ -43,8 +43,12 @@ Arguments:
 	
 	
 	int procNum;
+	
 	vector <pair<int,int> > *poolStack;
+
+
 	pthread_mutex_t buffer_mutex;
+	
 	//initialize cond mutex
 	pthread_mutex_t condMutex;
 	pthread_cond_t cond;
@@ -76,13 +80,18 @@ Arguments:
 		
 		std::vector< std::pair<int,int> > * vectorPtr;
 		vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
-		
+		pair<int,int> pairPtr;
+		pairPtr.first = -1;
+		pairPtr.second = 0;
+
+		// vectorPtr[0].push_back( pairPtr );
 		createInitalWork(gridSize, vectorPtr);
+		// createWork(gridSize, vectorPtr);
 		
-		for (int i = 0; i < gridSize; ++i)
-		{
-			printSolutionVector(&vectorPtr[i]);
-		}
+		// for (int i = 0; i < gridSize; ++i)
+		// {
+		// 	printSolutionVector(&vectorPtr[i]);
+		// }
 		
 		pthread_t threads[procNum];
 		
@@ -108,54 +117,25 @@ Arguments:
 		}
 
 		processFunc(&mon);
-		// //monitor * mon = new monitor(procNum,vectorPtr);
+	//monitor * mon = new monitor(procNum,vectorPtr);
 		  
-		// for (int i = 0; i < procNum; ++i)
-		// {	  
-		// 	pthread_join(threads[i], &ret);
-  // 		}
+		for (int i = 0; i < procNum; ++i)
+		{	  
+			pthread_join(threads[i], &ret);
+		}
 
 
 
-		// vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
-
-		// for (int i = 0; i < gridSize; ++i)
-		// {
-		// 	pair<int,int> * pairPtr = new std::pair<int,int>;
-		// 	(*pairPtr).first = 0;
-		// 	(*pairPtr).second = i;
-
-		// 	vectorPtr[i].push_back( *pairPtr );
-		// 	printSolutionVector(vectorPtr[i]);
-		// 	delete(pairPtr);
-		// }
-	
-		// create work
-		
-		// stack work
-		// get work
-
-		// for (int i = 0; i < gridSize; ++i)
-		// {
-		// 	delete(vectorPtr+i);
-		// }
 
 		return 0;
 	}
 
-	// this funtion create work stack 
-	// arguments:
-	// 		size of the grid
-	// 		location 
-	void createWork(int gridSize, std::vector<std::pair<int,int> > v)
-	{
 
-	}
 	void printSolutionVector(std::vector< std::pair<int,int> >  * solutionVector)
 	{
+	  	std::cout << "\n";
 		for (std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin() ; i != (*solutionVector).end(); ++i)
-	    	std::cout << ' ' << (*i).first << ' '<< (*i).second;
-	  	std::cout << '\n';
+	    	std::cout << ' ' << (*i).first << ' '<< (*i).second<<'|';
 
 	}
 	
@@ -180,16 +160,51 @@ Arguments:
 			(*pairPtr).second = i;
 
 			vectorPtr[i].push_back( *pairPtr );
-			printSolutionVector(&vectorPtr[i]);
+			// printSolutionVector(&vectorPtr[i]);
 			delete(pairPtr);
 		}
 	
 
 	}
-	bool checkSolution(std::vector<std::pair<int,int> > * solutionVector)
+		// this funtion create work stack 
+	// arguments:
+	// 		size of the grid
+	// 		location 
+	void createWork(int gridSize, std::vector<std::pair<int,int> > * solutionVector)
 	{
 
-		// if (checkRow(solutionVector) && checkDiagHigh(solutionVector) && checkDiagLow(solutionVector))
+		std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin();
+		int xCurrent = (*i).first;
+		int yCurrent = (*i).second;
+		
+		cout<<"Create New work\n"; //<<xCurrent<<'|'<<yCurrent <<  endl;
+		for (int i = 0; i < gridSize; ++i)
+		{
+			// check if solutionVector is a solution xCurrent = gridSize
+			if(xCurrent == (gridSize-1))
+			{
+				cout<<"\t\t\tsolution found!!!!"<< endl;
+				return;
+			}
+			pair<int,int> newPair;
+			newPair.first = xCurrent + 1;
+			newPair.second = i;
+			// pair<int,int> * pairPtr = new std::pair<int,int>;
+			// (*pairPtr).first = xCurrent+1;
+			// (*pairPtr).second = i;
+			solutionVector[i].push_back( newPair );
+			printSolutionVector(&solutionVector[i]);
+			
+
+			
+			// delete(pairPtr);
+		}
+	
+	}
+	bool isPosibleSolution(std::vector<std::pair<int,int> > * solutionVector)
+	{
+		printSolutionVector(solutionVector);
+		if (checkRow(solutionVector) && checkDiagHigh(solutionVector) && checkDiagLow(solutionVector))
 			return true;
 		return false;
 	}
@@ -265,22 +280,36 @@ Arguments:
 	
 	void * processFunc(void *p)
 	{
+		bool haveNewWork = false;
 		monitor * mon =  (monitor *) p;
-		std::vector< pair<int,int> > solutionVector;
+		int test = 4; 
+		std::vector< std::pair<int,int> > * solutionVector;
+
+		solutionVector = new  std::vector< std::pair<int,int> > [mon->maxIndex] ;
 		
 		while(!mon->endjob_flag)
 		{
-			mon->mon_enter();
-
-			solutionVector = mon->args;
+			mon->mon_enter(solutionVector, haveNewWork);
+			// solutionVector[0] = mon->args;
 			mon->mon_exit();
-			
-			if(!checkSolution(&solutionVector))
+			// printSolutionVector(&solutionVector[0]);
+			// if(!isPosibleSolution(&solutionVector[0]))
+			if(test>=0)
 			{
-				
-			}
+				cout<<"it's posible generate more now"<< endl;
+				// std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin();
+				// cout << '*' << (*i).first << ' '<< (*i).second<<'*';
+				// // 	  	std::cout << "\n";
+				// for ( i ; i != (*solutionVector).end(); ++i)
+				// 	cout << '=' << (*i).first << ' '<< (*i).second<<'=';
 
+				printSolutionVector(&solutionVector[0]);
+
+				createWork(mon->maxIndex, solutionVector);
+				haveNewWork = true;
+			}
 		}
 		return NULL;
 	}
+
 

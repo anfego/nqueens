@@ -13,6 +13,7 @@ using namespace std;
 bool foo(vector<pair<int,int> > args, stack< vector <pair<int,int> > > returnArgs);
 
 void printSolutionVector1(std::vector< std::pair<int,int> >  * solutionVector);
+
 monitor::monitor()
 {
 	cerr << "ERROR";
@@ -29,7 +30,8 @@ monitor::monitor(int passed_proc,  int gridSize, vector< pair<int,int> > * input
 void monitor::mon_init(int passed_proc, int gridSize, std::vector < std::pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed)
 {
 	cout << "Monitor init" << endl;
-	for (int i = 0; i < gridSize; ++i)
+	maxIndex = gridSize;
+	for (int i = 0; i < maxIndex; ++i)
 	{
 		printSolutionVector1(inputPull+i);
 		poolStack.push(*(inputPull+i));
@@ -63,38 +65,43 @@ int monitor::monitor_wait_in_que()
 	return locked_threads;
 }
 
-void monitor::mon_enter()
+void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool haveWork)
 {
     pthread_mutex_lock(&buffer_mutex);//free lock
 	cout << "Monitor enter" << endl;
 	// conditional mutex lock(queue_is_empty())
-	if(result)
+	if(haveWork)
 	{
-		while(returnArgs.size() > 0)
-		{			
-			poolStack.push(returnArgs.top());
-			returnArgs.pop();
-			job_number++;
+		for (int i = 0; i < maxIndex; ++i)
+		{
+			cout << "Stacking Data" << endl;
+			poolStack.push(*(inputPull+i));
 		}
+			
 	}
+
 	
-	if(job_number > 0)
+	if(poolStack.size() > 0)
 	{
-		cout << "pooling" << endl;
-		args = poolStack.top() ;
+		cout << "\tGetting Data" << endl;
+		for (int i = 0; i < maxIndex; ++i)
+		{
+			inputPull[i] = poolStack.top() ;
+			
+		}
 		poolStack.pop() ;
-		
-		job_number--;
+		printSolutionVector1(inputPull);
 	}
 	else
 	{
+		cout << "\t\tNO Data" << endl;
 		//conditional mutex k()
 		locked_threads++;
-		cout<<"\t Thread is Locked\n";
 		if(locked_threads == total_proc)
 			endjob_flag = true;
 		else
 		{
+			cout<<"\t Thread is Locked\n";
 	        pthread_mutex_unlock(&buffer_mutex);//free lock
         	pthread_cond_wait(&cond, &condMutex); // unlock & sleep; wake up when signaled & lock again
         	mon_continue();
@@ -105,7 +112,7 @@ void monitor::mon_enter()
 
 void monitor::mon_exit()
 {
-	cout << "Monitor exit" << endl;
+	cout << "Monitor EXIT" << endl;
 	if((locked_threads > 0 && job_number > 0 )|| endjob_flag)
 	{
 		pthread_cond_signal(&cond);
@@ -117,7 +124,7 @@ void monitor::mon_exit()
         pthread_mutex_unlock(&buffer_mutex);//free lock
 	}
 
-	result = foo(args, returnArgs);
+	// result = foo(args, returnArgs);
 }
 
 void monitor::mon_continue()
