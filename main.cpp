@@ -123,7 +123,7 @@ Arguments:
 		for (int i = 0; i < procNum-1; ++i)
 		{	  
 			pthread_join(threads[i], &ret);
-			numSolutions = numSolutions + *(int *)ret;
+//			numSolutions = numSolutions + *(int *)ret;
 			cout<<"Total solutions: " << numSolutions << endl;
 
 		}
@@ -327,7 +327,8 @@ Arguments:
 			else
 				haveNewWork = false;
 		}
-		return (void *)numSolutions;
+//		return (void *)numSolutions;
+		return NULL;
 	}
 
 

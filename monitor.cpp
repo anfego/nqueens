@@ -96,18 +96,19 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 	{
 		cout << "\t\tNO Data" << endl;
 		//conditional mutex k()
-		locked_threads++;
-		if(locked_threads == total_proc){
-
-			endjob_flag = true;
+		if(locked_threads >= (total_proc-1))
+		{
 			cout<<"\t FINISHED!!!!\n";
+			endjob_flag = true;
 			mon_exit();
 		}
 		else
 		{
 			cout<<"\t Thread is Locked\n";
+			locked_threads++;
 	        pthread_mutex_unlock(&buffer_mutex);//free lock
-        	pthread_cond_wait(&cond, &condMutex); // unlock & sleep; wake up when signaled & lock again
+        	pthread_cond_wait(&cond, &buffer_mutex); // unlock & sleep; wake up when signaled & lock again
+			cout<<"\t Thread is UNLocked\n";
         	mon_continue();
         }
     }
@@ -117,16 +118,20 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 void monitor::mon_exit()
 {
 	//cout << "Monitor EXIT" << endl;
-	if((locked_threads > 0 && job_number > 0 )|| endjob_flag)
+	if (endjob_flag)
 	{
+		cout<<"BroadCast\n";
+		pthread_cond_broadcast(&cond);
+	}
+	else if( locked_threads > 0 && job_number > 0 )
+	{
+		
+		cout<<"Single Signal\n";
 		pthread_cond_signal(&cond);
 		locked_threads--;
         // pthread_mutex_unlock(&buffer_mutex);//free lock
 	}
-	else
-	{
-        pthread_mutex_unlock(&buffer_mutex);//free lock
-	}
+	pthread_mutex_unlock(&buffer_mutex);//free lock
 
 	// result = foo(args, returnArgs);
 }
