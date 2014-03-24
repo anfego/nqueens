@@ -137,6 +137,7 @@ Arguments:
 		for (std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin() ; i != (*solutionVector).end(); ++i)
 	    	std::cout << ' ' << (*i).first << ' '<< (*i).second<<'|';
 
+		cout<<endl;
 	}
 	
 	void printALLSolutionVectors(std::vector< std::pair<int,int> >  * solutionVector)
@@ -174,10 +175,10 @@ Arguments:
 	{
 
 		std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin();
-		int xCurrent = (*i).first;
-		int yCurrent = (*i).second;
+		int xCurrent = (*solutionVector).back().first;
+		int yCurrent = (*solutionVector).back().second;
 		
-		cout<<"Create New work\n"; //<<xCurrent<<'|'<<yCurrent <<  endl;
+		// cout<<"Create New work\n"; //<<xCurrent<<'|'<<yCurrent <<  endl;
 		for (int i = 0; i < gridSize; ++i)
 		{
 			// check if solutionVector is a solution xCurrent = gridSize
@@ -193,7 +194,7 @@ Arguments:
 			// (*pairPtr).first = xCurrent+1;
 			// (*pairPtr).second = i;
 			solutionVector[i].push_back( newPair );
-			printSolutionVector(&solutionVector[i]);
+			// printSolutionVector(&solutionVector[i]);
 			
 
 			
@@ -203,29 +204,46 @@ Arguments:
 	}
 	bool isPosibleSolution(std::vector<std::pair<int,int> > * solutionVector)
 	{
-		printSolutionVector(solutionVector);
-		if (checkRow(solutionVector) && checkDiagHigh(solutionVector) && checkDiagLow(solutionVector))
-			return true;
+		// printSolutionVector(solutionVector);
+		if(checkRow(solutionVector))
+		{
+			// cout<<"ROW: this is  solution"<<endl;
+			if (checkDiagHigh(solutionVector))
+			{
+				// cout<<"DH: this is  solution"<<endl;
+				if (checkDiagLow(solutionVector))
+				{
+					// cout<<"DL: this is  solution"<<endl;
+					return true;
+				}
+			}
+		}
+		
 		return false;
 	}
 	bool checkRow(std::vector<std::pair<int,int> > * solutionVector)
 	{
 		
-		
-		int xCurrent = (*solutionVector).back().first;
-		int yCurrent = (*solutionVector).back().second;
-		// pop laststd::pair to avoid to compare
+		if((*solutionVector).size() > 1)
+		{
+			int xCurrent = (*solutionVector).back().first;
+			int yCurrent = (*solutionVector).back().second;
+			// pop laststd::pair to avoid to compare
 
-		(*solutionVector).pop_back();
-		
-		for (std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin() ; i != (*solutionVector).end(); ++i)
-	    {
-			if((*i).first == xCurrent)
-				return false;
+			(*solutionVector).pop_back();
+			
+			for (std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin() ; i != (*solutionVector).end(); ++i)
+		    {
+				if((*i).second == yCurrent)
+				{
+					// cout<<"\tNOT SOLUTION!!!!\n";
+					return false;
+				}
+			}
+			// possible solution, addstd::pair back to the vector
+			std::pair<int,int> temp(xCurrent,yCurrent);
+			(*solutionVector).push_back(temp);
 		}
-		// possible solution, addstd::pair back to the vector
-		std::pair<int,int> temp(xCurrent,yCurrent);
-		(*solutionVector).push_back(temp);
 		return true;
 	}
 	bool checkDiagHigh(std::vector<std::pair<int,int> > * solutionVector)
@@ -240,12 +258,15 @@ Arguments:
 		
 		for (std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin() ; i != (*solutionVector).end(); ++i)
 	    {
-
-			for (int pos = 0; (yCurrent-pos) <= 0 ; ++pos)
-			{
-				if((*i).first == (xCurrent-pos) && (*i).second == (yCurrent-pos))
-					return false;
 			
+			for (int pos = 0; (yCurrent-pos) >= 0 ; ++pos)
+			{
+				// cout<<" cheching DH: "<< (*i).first << " == " << (xCurrent-pos) << " && " << (*i).second << " == " <<(yCurrent-pos) << endl;
+				if((*i).first == (xCurrent-pos) && (*i).second == (yCurrent-pos))
+				{
+					// cout<<"\tNOT SOLUTION!!!!\n";
+					return false;
+				}
 			}
 		}
 		// possible solution, addstd::pair back to the vector
@@ -264,12 +285,14 @@ Arguments:
 		
 		for (std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin() ; i != (*solutionVector).end(); ++i)
 	    {
-
-			for (int pos = 0; (xCurrent-pos) <= 0 ; ++pos)
-			{
+			for (int pos = 0; (xCurrent-pos) >= 0 ; ++pos)
+			{	
+				// cout<<" cheching DL: "<< (*i).first << " == " << (xCurrent-pos) << " && " << (*i).second << " == " <<(yCurrent+pos) << endl;
 				if((*i).first == (xCurrent-pos) && (*i).second == (yCurrent+pos))
+				{
+					// cout<<"\tNOT SOLUTION!!!!\n";
 					return false;
-			
+				}
 			}
 		}
 		// possible solution, addstd::pair back to the vector
@@ -282,7 +305,7 @@ Arguments:
 	{
 		bool haveNewWork = false;
 		monitor * mon =  (monitor *) p;
-		int test = 4; 
+		int numSolutions = 0; 
 		std::vector< std::pair<int,int> > * solutionVector;
 
 		solutionVector = new  std::vector< std::pair<int,int> > [mon->maxIndex] ;
@@ -293,23 +316,28 @@ Arguments:
 			// solutionVector[0] = mon->args;
 			mon->mon_exit();
 			// printSolutionVector(&solutionVector[0]);
-			// if(!isPosibleSolution(&solutionVector[0]))
-			if(test>=0)
+			if(isPosibleSolution(&solutionVector[0]))
+			// if(test>=0)
 			{
-				cout<<"it's posible generate more now"<< endl;
-				// std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin();
-				// cout << '*' << (*i).first << ' '<< (*i).second<<'*';
-				// // 	  	std::cout << "\n";
-				// for ( i ; i != (*solutionVector).end(); ++i)
-				// 	cout << '=' << (*i).first << ' '<< (*i).second<<'=';
-
-				printSolutionVector(&solutionVector[0]);
-
-				createWork(mon->maxIndex, solutionVector);
-				haveNewWork = true;
+				// cout<<"it's posible generate more now"<< endl;
+			
+				if((*solutionVector).size() == mon->maxIndex)
+				{
+					// printSolutionVector(&solutionVector[0]);
+					// cout<<"\t\t\tTHIS A SOLUTION\n";
+					numSolutions++;
+					haveNewWork = false;
+				}
+				else
+				{
+					createWork(mon->maxIndex, solutionVector);
+					haveNewWork = true;
+				}
 			}
+			else
+				haveNewWork = false;
 		}
-		return NULL;
+		return (void *)numSolutions;
 	}
 
 

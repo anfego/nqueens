@@ -68,13 +68,13 @@ int monitor::monitor_wait_in_que()
 void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool haveWork)
 {
     pthread_mutex_lock(&buffer_mutex);//free lock
-	cout << "Monitor enter" << endl;
+	// cout << "Monitor enter" << endl;
 	// conditional mutex lock(queue_is_empty())
 	if(haveWork)
 	{
 		for (int i = 0; i < maxIndex; ++i)
 		{
-			cout << "Stacking Data" << endl;
+			// cout << "Stacking Data" << endl;
 			poolStack.push(*(inputPull+i));
 		}
 			
@@ -83,14 +83,14 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 	
 	if(poolStack.size() > 0)
 	{
-		cout << "\tGetting Data" << endl;
+		// cout << "\tGetting Data" << endl;
 		for (int i = 0; i < maxIndex; ++i)
 		{
 			inputPull[i] = poolStack.top() ;
 			
 		}
 		poolStack.pop() ;
-		printSolutionVector1(inputPull);
+		// printSolutionVector1(inputPull);
 	}
 	else
 	{
@@ -112,7 +112,7 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 
 void monitor::mon_exit()
 {
-	cout << "Monitor EXIT" << endl;
+	// cout << "Monitor EXIT" << endl;
 	if((locked_threads > 0 && job_number > 0 )|| endjob_flag)
 	{
 		pthread_cond_signal(&cond);
