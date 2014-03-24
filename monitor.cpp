@@ -29,11 +29,11 @@ monitor::monitor(int passed_proc,  int gridSize, vector< pair<int,int> > * input
 
 void monitor::mon_init(int passed_proc, int gridSize, std::vector < std::pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed)
 {
-	cout << "Monitor init" << endl;
+	//cout << "Monitor init" << endl;
 	maxIndex = gridSize;
 	for (int i = 0; i < maxIndex; ++i)
 	{
-		printSolutionVector1(inputPull+i);
+	//	printSolutionVector1(inputPull+i);
 		poolStack.push(*(inputPull+i));
 		
 		// for ( std::vector<std::pair<int,int> >::iterator i = (*inputPull).begin() ; i != (*inputPull[i]).end(); ++i)
@@ -97,8 +97,12 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 		cout << "\t\tNO Data" << endl;
 		//conditional mutex k()
 		locked_threads++;
-		if(locked_threads == total_proc)
+		if(locked_threads == total_proc){
+
 			endjob_flag = true;
+			cout<<"\t FINISHED!!!!\n";
+			mon_exit();
+		}
 		else
 		{
 			cout<<"\t Thread is Locked\n";
@@ -112,7 +116,7 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 
 void monitor::mon_exit()
 {
-	// cout << "Monitor EXIT" << endl;
+	//cout << "Monitor EXIT" << endl;
 	if((locked_threads > 0 && job_number > 0 )|| endjob_flag)
 	{
 		pthread_cond_signal(&cond);
@@ -130,7 +134,7 @@ void monitor::mon_exit()
 void monitor::mon_continue()
 {
     // pthread_mutex_lock(&buffer_mutex);//free lock
-    cout << "Monitor continue" << endl;
+//    cout << "Monitor continue" << endl;
     if(job_number > 0)
 	{
 		args = poolStack.top() ;

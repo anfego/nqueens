@@ -119,14 +119,14 @@ Arguments:
 
 		processFunc(&mon);
 	//monitor * mon = new monitor(procNum,vectorPtr);
-		  
-		for (int i = 0; i < procNum; ++i)
+		 cout<<"here\n";
+		for (int i = 0; i < procNum-1; ++i)
 		{	  
 			pthread_join(threads[i], &ret);
 			numSolutions = numSolutions + *(int *)ret;
+			cout<<"Total solutions: " << numSolutions << endl;
 
 		}
-
 
 
 
@@ -185,17 +185,9 @@ Arguments:
 		for (int i = 0; i < gridSize; ++i)
 		{
 			// check if solutionVector is a solution xCurrent = gridSize
-			if(xCurrent == (gridSize-1))
-			{
-				cout<<"\t\t\tsolution found!!!!"<< endl;
-				return;
-			}
 			pair<int,int> newPair;
 			newPair.first = xCurrent + 1;
 			newPair.second = i;
-			// pair<int,int> * pairPtr = new std::pair<int,int>;
-			// (*pairPtr).first = xCurrent+1;
-			// (*pairPtr).second = i;
 			solutionVector[i].push_back( newPair );
 			// printSolutionVector(&solutionVector[i]);
 			
@@ -316,17 +308,12 @@ Arguments:
 		while(!mon->endjob_flag)
 		{
 			mon->mon_enter(solutionVector, haveNewWork);
-			// solutionVector[0] = mon->args;
 			mon->mon_exit();
-			// printSolutionVector(&solutionVector[0]);
 			if(isPosibleSolution(&solutionVector[0]))
-			// if(test>=0)
 			{
-				// cout<<"it's posible generate more now"<< endl;
-			
 				if((*solutionVector).size() == mon->maxIndex)
 				{
-					// printSolutionVector(&solutionVector[0]);
+					printSolutionVector(&solutionVector[0]);
 					// cout<<"\t\t\tTHIS A SOLUTION\n";
 					numSolutions++;
 					haveNewWork = false;
