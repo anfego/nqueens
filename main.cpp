@@ -61,6 +61,7 @@ Arguments:
 		bool quiet = false;
 		int val;
 		void *ret = &val;
+		int numSolutions = 0;
 
 
 		if(argc < 5)
@@ -122,6 +123,8 @@ Arguments:
 		for (int i = 0; i < procNum; ++i)
 		{	  
 			pthread_join(threads[i], &ret);
+			numSolutions = numSolutions + *(int *)ret;
+
 		}
 
 
