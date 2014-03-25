@@ -60,13 +60,13 @@ Arguments:
 		int procNum = 1;
 		bool quiet = false;
 		int val;
-		void *ret = &val;
+		void *ret;
 		int numSolutions = 0;
 
 
 		if(argc < 5)
 		{
-			cerr << "Number of Arguments incorrect";
+			cerr << "Number of Arguments incorrect\n";
 			return 0;
 		}
 		if(!strcmp(argv[1],"-n")){
@@ -75,9 +75,9 @@ Arguments:
 		}
 		if(!strcmp(argv[3],"-p"))
 			procNum = atoi(argv[4]);
-
-		if(!strcmp(argv[5],"-q"))
-			quiet = true;
+		if(argc == 6)
+			if(!strcmp(argv[5],"-q"))
+				quiet = true;
 		
 		std::vector< std::pair<int,int> > * vectorPtr;
 		vectorPtr = new ( std::vector< std::pair<int,int> > [gridSize] );
@@ -105,12 +105,12 @@ Arguments:
 		cond = PTHREAD_COND_INITIALIZER;
 
 		// // creates a vector "stack" for each row
-		monitor mon(procNum, gridSize, vectorPtr, buffer_mutex, condMutex, cond);
+		monitor mon(procNum, quiet, gridSize, vectorPtr, buffer_mutex, condMutex, cond);
 		
 
 		for (int i = 0; i < procNum-1; ++i)
 		{
-			cout<<"Create: "<<i<<endl;
+			
 			if (pthread_create(&threads[i], NULL, processFunc, &mon)) 
 			{
 				perror("pthread_create: ");
@@ -118,16 +118,16 @@ Arguments:
 			}
 		}
 
-		processFunc(&mon);
+		numSolutions = (int)processFunc(&mon);
 	//monitor * mon = new monitor(procNum,vectorPtr);
 		// cout<<"here\n";
 		for (int i = 0; i < procNum-1; ++i)
 		{	  
-			cout<<"Back: " <<val<< endl;
 			pthread_join(threads[i], &ret);
-			// numSolutions = numSolutions + *(int *)ret;
+			numSolutions = numSolutions + (int)ret;
 
 		}
+		cout<<"Total: " <<numSolutions<< endl;
 
 
 		cout<<"EXIT\n";
@@ -317,7 +317,8 @@ Arguments:
 				{
 					if((*solutionVector).size() == mon->maxIndex)
 					{
-						printSolutionVector(&solutionVector[0]);
+						if(!mon->quiet)
+							printSolutionVector(&solutionVector[0]);
 						// cout<<"\t\t\tTHIS A SOLUTION\n";
 						numSolutions++;
 						haveNewWork = false;
@@ -333,7 +334,7 @@ Arguments:
 			}
 				
 		}
-				cout<<"\t\tDONE!!!!!!! whit: " << numSolutions<<endl;
+				// cout<<"\t\tDONE!!!!!!! whit: " << numSolutions<<endl;
 		return (void *)numSolutions;
 		// return NULL;
 	}

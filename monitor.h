@@ -26,6 +26,7 @@ public:
 	int total_proc;
 	bool endjob_flag;
 	bool result;
+	bool quiet;
 	stack< vector <pair<int,int> > > poolStack;
 	stack< vector <pair<int,int> > > returnArgs;
 	
@@ -38,10 +39,10 @@ public:
 	
 	//initialize threads
 
-	monitor(int passed_proc,  int gridSize, vector< pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed);
+	monitor(int passed_proc, bool quietFlag, int gridSize, vector< pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed);
 	monitor();
 	~monitor(){};
-	void mon_init(int passed_proc, int gridSize, std::vector < std::pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex, pthread_mutex_t condMutex, pthread_cond_t cond);
+	void mon_init(int passed_proc, bool quietFlag, int gridSize, std::vector < std::pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex, pthread_mutex_t condMutex, pthread_cond_t cond);
 	int monitor_wait_in_que();
 	void mon_enter(std::vector < std::pair<int,int> > * inputPull, bool haveWork);
 	void mon_exit();

@@ -20,13 +20,13 @@ monitor::monitor()
 	//mon_init(int passed_proc, vector< pair<int,int> > * inputPull);
 }
 
-monitor::monitor(int passed_proc,  int gridSize, vector< pair<int,int> > * inputPull, pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed)
+monitor::monitor(int passed_proc, bool quietFlag, int gridSize, vector< pair<int,int> > * inputPull, pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed)
 {
 	cout << "Monitor constructor" << endl;
-	monitor::mon_init(passed_proc, gridSize, inputPull, buffer_mutex_passed, condMutex_passed, cond_passed);
+	monitor::mon_init(passed_proc, quietFlag, gridSize, inputPull, buffer_mutex_passed, condMutex_passed, cond_passed);
 }
 
-void monitor::mon_init(int passed_proc, int gridSize, std::vector < std::pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed)
+void monitor::mon_init(int passed_proc, bool quietFlag, int gridSize, std::vector < std::pair<int,int> > * inputPull,pthread_mutex_t buffer_mutex_passed, pthread_mutex_t condMutex_passed, pthread_cond_t cond_passed)
 {
 	//cout << "Monitor init" << endl;
 	maxIndex = gridSize;
@@ -51,6 +51,7 @@ void monitor::mon_init(int passed_proc, int gridSize, std::vector < std::pair<in
 	total_proc = passed_proc;
 	endjob_flag = false;
 	result = false;
+	quiet = quietFlag;
 	// returnArgs = new vector<pair<int,int> >;
 	//initialize mutex
 	buffer_mutex = buffer_mutex_passed;
