@@ -94,7 +94,7 @@ Arguments:
 		// 	printSolutionVector(&vectorPtr[i]);
 		// }
 		
-		pthread_t threads[procNum];
+		pthread_t threads[procNum-1];
 		
 		procNum = procNum;
 		poolStack = vectorPtr;
@@ -110,6 +110,7 @@ Arguments:
 
 		for (int i = 0; i < procNum-1; ++i)
 		{
+			cout<<"Create: "<<i<<endl;
 			if (pthread_create(&threads[i], NULL, processFunc, &mon)) 
 			{
 				perror("pthread_create: ");
@@ -119,17 +120,17 @@ Arguments:
 
 		processFunc(&mon);
 	//monitor * mon = new monitor(procNum,vectorPtr);
-		 cout<<"here\n";
+		// cout<<"here\n";
 		for (int i = 0; i < procNum-1; ++i)
 		{	  
+			cout<<"Back: " <<val<< endl;
 			pthread_join(threads[i], &ret);
-//			numSolutions = numSolutions + *(int *)ret;
-			cout<<"Total solutions: " << numSolutions << endl;
+			// numSolutions = numSolutions + *(int *)ret;
 
 		}
 
 
-
+		cout<<"EXIT\n";
 		return 0;
 	}
 
@@ -308,28 +309,33 @@ Arguments:
 		while(!mon->endjob_flag)
 		{
 			mon->mon_enter(solutionVector, haveNewWork);
-			mon->mon_exit();
-			if(isPosibleSolution(&solutionVector[0]))
+			// mon->mon_exit();
+			if (!mon->endjob_flag)
 			{
-				if((*solutionVector).size() == mon->maxIndex)
+					/* code */
+				if(isPosibleSolution(&solutionVector[0]))
 				{
-					printSolutionVector(&solutionVector[0]);
-					// cout<<"\t\t\tTHIS A SOLUTION\n";
-					numSolutions++;
-					haveNewWork = false;
+					if((*solutionVector).size() == mon->maxIndex)
+					{
+						printSolutionVector(&solutionVector[0]);
+						// cout<<"\t\t\tTHIS A SOLUTION\n";
+						numSolutions++;
+						haveNewWork = false;
+					}
+					else
+					{
+						createWork(mon->maxIndex, solutionVector);
+						haveNewWork = true;
+					}
 				}
 				else
-				{
-					createWork(mon->maxIndex, solutionVector);
-					haveNewWork = true;
-				}
+					haveNewWork = false;
 			}
-			else
-				haveNewWork = false;
+				
 		}
-		cout<<"\t\tDONE!!!!!!!\n";
-//		return (void *)numSolutions;
-		return NULL;
+				cout<<"\t\tDONE!!!!!!! whit: " << numSolutions<<endl;
+		return (void *)numSolutions;
+		// return NULL;
 	}
 
 

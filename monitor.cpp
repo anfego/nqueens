@@ -10,7 +10,6 @@
 
 using namespace std;
 
-bool foo(vector<pair<int,int> > args, stack< vector <pair<int,int> > > returnArgs);
 
 void printSolutionVector1(std::vector< std::pair<int,int> >  * solutionVector);
 
@@ -83,33 +82,46 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 	
 	if(poolStack.size() > 0)
 	{
-		// cout << "\tGetting Data" << endl;
-		for (int i = 0; i < maxIndex; ++i)
-		{
-			inputPull[i] = poolStack.top() ;
+		// mon_exit();
+		
+		mon_continue(inputPull);
+		// for (int i = 0; i < maxIndex; ++i)
+		// {
+		// 	inputPull[i] = poolStack.top() ;
 			
-		}
-		poolStack.pop() ;
+		// }
+		// poolStack.pop() ;
+		// // if(locked_threads > 0)
+		mon_exit();
 		// printSolutionVector1(inputPull);
 	}
 	else
 	{
-		cout << "\t\tNO Data" << endl;
+		// cout << "\t\tNO Data" << endl;
 		//conditional mutex k()
 		if(locked_threads >= (total_proc-1))
 		{
 			cout<<"\t FINISHED!!!!\n";
 			endjob_flag = true;
 			mon_exit();
+			return;
 		}
 		else
 		{
-			cout<<"\t Thread is Locked\n";
+			// cout<<"\t Thread is Locked\n";
 			locked_threads++;
-	        pthread_mutex_unlock(&buffer_mutex);//free lock
-        	pthread_cond_wait(&cond, &buffer_mutex); // unlock & sleep; wake up when signaled & lock again
-			cout<<"\t Thread is UNLocked\n";
+			// cout<<"\t Thread is Locked: "<<locked_threads<<endl;
+			pthread_mutex_unlock(&buffer_mutex);//free lock
+			
+			pthread_mutex_trylock(&condMutex);//free lock
+        	
+        	pthread_cond_wait(&cond, &condMutex); // unlock & sleep; wake up when signaled & lock again
+			locked_threads--;
+			// cout<<"\t\t Thread is UNLocked: "<<locked_threads<<endl;
         	mon_continue(inputPull);
+        	mon_exit();
+        	
+
         }
     }
 
@@ -117,21 +129,36 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 
 void monitor::mon_exit()
 {
-	//cout << "Monitor EXIT" << endl;
-	if (endjob_flag)
-	{
-		cout<<"BroadCast\n";
-		pthread_cond_broadcast(&cond);
-	}
-	else if( locked_threads > 0 && job_number > 0 )
+	// if(endjob_flag && locked_threads >= (total_proc-1))
+	// {
+	// 	cout<<"BroadCast Signal";
+	// 	pthread_cond_broadcast(&cond);
+	// 	pthread_mutex_unlock(&condMutex);
+	
+	// }else 
+	if( locked_threads > 0)
 	{
 		
-		cout<<"Single Signal\n";
+		// cout<<"Single Signal\n";
+		pthread_mutex_unlock(&condMutex);
 		pthread_cond_signal(&cond);
-		locked_threads--;
-        // pthread_mutex_unlock(&buffer_mutex);//free lock
+		return;
+		// pthread_mutex_unlock(&condMutex);
+		// pthread_mutex_unlock(&buffer_mutex);//free lock
 	}
-	pthread_mutex_unlock(&buffer_mutex);//free lock
+	else if(locked_threads == 0)
+	{
+		// cout<<"No locked_threads\n";
+		if(endjob_flag)
+		{
+			cout<<"Last ONE\n";
+			/* code */
+		}
+
+		
+	}
+	pthread_mutex_unlock(&buffer_mutex);
+
 
 	// result = foo(args, returnArgs);
 }
@@ -140,20 +167,22 @@ void monitor::mon_continue(std::vector < std::pair<int,int> > * inputPull)
 {
     // pthread_mutex_lock(&buffer_mutex);//free lock
 	//    cout << "Monitor continue" << endl;
-	for (int i = 0; i < maxIndex; ++i)
+	if(!endjob_flag)
 	{
-		inputPull[i] = poolStack.top() ;
-		
+
+		if(poolStack.size() > 0)
+		{
+			// cout << "\tGetting Data" << endl;
+			for (int i = 0; i < maxIndex; ++i)
+			{
+				inputPull[i] = poolStack.top() ;
+				
+			}
+			poolStack.pop() ;
+		}
 	}
-	poolStack.pop() ;
 }
 
-bool foo(vector<pair<int,int> > args, stack< vector <pair<int,int> > > returnArgs)
-{
-	cout << "FOO func" << endl;
-	//returnArgs = NULL;
-	return true;
-}
 void printSolutionVector1(std::vector< std::pair<int,int> >  * solutionVector)
 {
 	for (std::vector<std::pair<int,int> >::iterator i = (*solutionVector).begin() ; i != (*solutionVector).end(); ++i)
