@@ -45,7 +45,7 @@ public:
 	int monitor_wait_in_que();
 	void mon_enter(std::vector < std::pair<int,int> > * inputPull, bool haveWork);
 	void mon_exit();
-	void mon_continue();
+	void mon_continue(std::vector < std::pair<int,int> > * inputPull);
 
 };
 

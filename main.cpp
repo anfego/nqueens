@@ -327,6 +327,7 @@ Arguments:
 			else
 				haveNewWork = false;
 		}
+		cout<<"\t\tDONE!!!!!!!\n";
 //		return (void *)numSolutions;
 		return NULL;
 	}

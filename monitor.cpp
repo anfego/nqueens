@@ -109,7 +109,7 @@ void monitor::mon_enter(std::vector < std::pair<int,int> > * inputPull, bool hav
 	        pthread_mutex_unlock(&buffer_mutex);//free lock
         	pthread_cond_wait(&cond, &buffer_mutex); // unlock & sleep; wake up when signaled & lock again
 			cout<<"\t Thread is UNLocked\n";
-        	mon_continue();
+        	mon_continue(inputPull);
         }
     }
 
@@ -136,16 +136,16 @@ void monitor::mon_exit()
 	// result = foo(args, returnArgs);
 }
 
-void monitor::mon_continue()
+void monitor::mon_continue(std::vector < std::pair<int,int> > * inputPull)
 {
     // pthread_mutex_lock(&buffer_mutex);//free lock
-//    cout << "Monitor continue" << endl;
-    if(job_number > 0)
+	//    cout << "Monitor continue" << endl;
+	for (int i = 0; i < maxIndex; ++i)
 	{
-		args = poolStack.top() ;
-		poolStack.pop() ;
-		job_number--;
+		inputPull[i] = poolStack.top() ;
+		
 	}
+	poolStack.pop() ;
 }
 
 bool foo(vector<pair<int,int> > args, stack< vector <pair<int,int> > > returnArgs)
