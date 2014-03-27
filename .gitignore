@@ -13,3 +13,4 @@ README.txt
 p4
 *.o
 *.log
+*.tar
